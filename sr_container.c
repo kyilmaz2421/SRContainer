@@ -41,9 +41,51 @@ struct cgroups_control *cgroups[5] = {
 			NULL                       // NULL at the end of the array
 		}
 	},
-	NULL                               // NULL at the end of the array
+    & (struct cgroups_control) {
+		.control = CGRP_PIDS_CONTROL,
+		.settings = (struct cgroup_setting *[]) {
+			& (struct cgroup_setting) {
+				.name = "pid.limit",
+				.value = "64"
+			},
+			&self_to_task,             // must be added to all the new controls added
+			NULL                       // NULL at the end of the array
+		}
+	},
+    & (struct cgroups_control) {
+		.control = CGRP_CPU_SET_CONTROL,
+		.settings = (struct cgroup_setting *[]) {
+			& (struct cgroup_setting) {
+				.name = "cpuset.limit",
+				.value = "1"
+			},
+			&self_to_task,             // must be added to all the new controls added
+			NULL                       // NULL at the end of the array
+		}
+	},
+        & (struct cgroups_control) {
+		.control = CGRP_CPU_CONTROL,
+		.settings = (struct cgroup_setting *[]) {
+			& (struct cgroup_setting) {
+				.name = "cpushares.limit",
+				.value = "256"
+			},
+			&self_to_task,             // must be added to all the new controls added
+			NULL                       // NULL at the end of the array
+		}
+	},  
+          & (struct cgroups_control) {
+		.control = CGRP_MEMORY_CONTROL,
+		.settings = (struct cgroup_setting *[]) {
+			& (struct cgroup_setting) {
+				.name = "memory.limit",
+				.value = "1073741824"
+			},
+			&self_to_task,             // must be added to all the new controls added
+			NULL                       // NULL at the end of the array
+		}
+	},                             // NULL at the end of the array
 };
-
 
 /**
  *  ------------------------ TODO ------------------------
@@ -53,7 +95,7 @@ struct cgroups_control *cgroups[5] = {
  *          3. c : The initial process to run inside the container
  *  
  *   You must extend it to support the following flags:
- *          1. C : The cpu shares weight to be set (cpu-cgroup controller)
+ *          1. C : The cpu shares  t to be set (cpu-cgroup controller)
  *          2. s : The cpu cores to which the container must be restricted (cpuset-cgroup controller)
  *          3. p : The max number of process's allowed within a container (pid-cgroup controller)
  *          4. b : The blockIO weight (blkio-cgroup controller)
@@ -67,16 +109,24 @@ struct cgroups_control *cgroups[5] = {
  *   For 7 you have to just set the hostname parameter of the 'child_config' struct in the header file
  *  ------------------------------------------------------
  **/
-int main(int argc, char **argv)
-{
+
+// struct child_config
+// {
+//     int argc;
+//     uid_t uid;
+//     int fd;
+//     char *hostname;
+//     char **argv;
+//     char *mount_dir;
+// };
+int main(int argc, char **argv){
     struct child_config config = {0};
     int option = 0;
     int sockets[2] = {0};
     pid_t child_pid = 0;
     int last_optind = 0;
     bool found_cflag = false;
-    while ((option = getopt(argc, argv, "c:m:u:")))
-    {
+    while ((option = getopt(argc, argv, "C:s:p:b:r:w:H:m:u:c"))){
         if (found_cflag)
             break;
 
@@ -97,6 +147,9 @@ int main(int argc, char **argv)
                 cleanup_stuff(argv, sockets);
                 return EXIT_FAILURE;
             }
+        case 'C':
+
+
             break;
         default:
             cleanup_stuff(argv, sockets);
@@ -179,8 +232,31 @@ int main(int argc, char **argv)
      * HINT: Note that the 'child_function' expects struct of type child_config.
      * ------------------------------------------------------
      **/
+    int status=0;
+    char *stack;                    /* Start of stack buffer */
+    char *stackTop;                 /* End of stack buffer */
+    
+    stack = malloc(1024*1024);
 
-        // You code for clone() goes here
+      if (stack == NULL){
+         exit(1);
+      }
+    stackTop = stack + STACK_SIZE;
+
+    child_pid = clone(child_function,stackTop, CLONE_NEWCGROUP | CLONE_NEWIPC |CLONE_NEWNET | CLONE_NEWNS | CLONE_NEWPID | CLONE_NEWUTS | SIGCHLD, config);
+      if (child_pid < 0){
+         /* The clone failed.  Report failure.  */
+         perror("The clone failed. \n");
+         status = -1;
+      }
+      else{
+        /* This is the parent process.  Wait for the child to complete.  */
+        child_pid = wait(NULL); /* reaping parent */
+        status = -1;
+         return status;
+        exit(1);
+    }
+
 
     /**
      *  ------------------------------------------------------
