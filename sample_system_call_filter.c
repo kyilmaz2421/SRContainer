@@ -20,7 +20,7 @@ if (!seccomp_ctx) {
  *          ptrace      - observe, track and control execution of another process
  * 
  *          seccomp_rule_add() is the method used to add a filtering rule
- *          SCMP_ACT_KILL is the action to take when there is match on this filter (IE. KILL the thread - no mercy!!!)
+ *          SCMP_FAIL is the action to take when there is match on this filter (IE. KILL the thread - no mercy!!!)
  *          SCMP_SYS(move_pages) -  the 3rd argument is the system-call number to which this filter applies. 
  *                                  we use the SCMP_SYS() macro to get the correct number based on the underlying architecture
  *          4th argument - You use this argument if you dont want to capture all calls to the system call but want to capture
@@ -29,7 +29,7 @@ if (!seccomp_ctx) {
  **/ 
 int filter_set_status = seccomp_rule_add(
                                             seccomp_ctx,            // the context to which the rule applies
-                                            SCMP_ACT_KILL,          // action to take on rule match
+                                            SCMP_FAIL,          // action to take on rule match
                                             SCMP_SYS(move_pages),   // get the sys_call number using SCMP_SYS() macro
                                             0                       // any additional argument matches
                                         );
@@ -40,7 +40,7 @@ if (filter_set_status) {
     return EXIT_FAILURE;
 }
 
-filter_set_status = seccomp_rule_add(seccomp_ctx, SCMP_ACT_KILL, SCMP_SYS(ptrace), 0);
+filter_set_status = seccomp_rule_add(seccomp_ctx, SCMP_FAIL, SCMP_SYS(ptrace), 0);
 if (filter_set_status) {
     if (seccomp_ctx)
         seccomp_release(seccomp_ctx);
@@ -59,7 +59,7 @@ if (filter_set_status) {
  **/
 filter_set_status = seccomp_rule_add(
                                     seccomp_ctx,                    // the context to which the rule applies
-                                    SCMP_ACT_KILL,                  // action to take on rule match
+                                    SCMP_FAIL,                  // action to take on rule match
                                     SCMP_SYS(unshare),              // get the sys_call number using SCMP_SYS() macro
                                     1,                              // any additional argument matches
                                     SCMP_A0(SCMP_CMP_MASKED_EQ, CLONE_NEWUSER, CLONE_NEWUSER)

@@ -17,7 +17,7 @@ int switch_child_root(const char *new_root, const char *put_old)
      *  Simply use the "pivot_root()" system call to switch child's root to the new root
      *  ------------------------------------------------------
      * */ 
-    int result = pivot_root(new_root, put_old);
+        int result = pivot_root(new_root, put_old);
     if(result < 0){
         perror("pivot_root error!");
     }
@@ -34,6 +34,16 @@ int switch_child_root(const char *new_root, const char *put_old)
  **/ 
 int setup_child_capabilities()
 {
+    /**
+     *  Follow these steps to check if you successfully set the capabilities
+     *      Copy the binary 'capsh' found inside the [/sbin] folder of the docker container
+     *          into the [/sbin] folder of the 'rootfs' you downloaded to run containers
+     *              cp /sbin/capsh $ROOTFS/sbin/
+     *  
+     *  Now if you run 'capsh --print' without this method implemented the output for [Bounding set]
+     *      will indicate many capabilities. But after properly implementing this method if you run the same
+     *      command inside your container you will see a smaller set of capabilities for [Bounding set]
+     **/
     return 0;
 }
 
@@ -108,6 +118,11 @@ int setup_child_mounts(struct child_config *config)
         fprintf(stderr, "invocation to rmdir() failed! %m\n");
         return -1;
     }
+    
+    if (mount(NULL, "/proc", "proc", 0, NULL)) {
+		fprintf(stderr, "attempt to mount proc failed!\n");
+		return -1;
+	}
     fprintf(stderr, "successfully setup child mounts.\n");
     return 0;
 }
