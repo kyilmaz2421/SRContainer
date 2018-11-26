@@ -75,7 +75,8 @@ int main(int argc, char **argv)
     pid_t child_pid = 0;
     int last_optind = 0;
     bool found_cflag = false;
-    while ((option = getopt(argc, argv, "c:m:u:")))
+    
+    while ((option = getopt(argc, argv, "C:s:p:M:r:w:H:m:u:c")))
     {
         if (found_cflag)
             break;
@@ -98,6 +99,10 @@ int main(int argc, char **argv)
                 return EXIT_FAILURE;
             }
             break;
+        case 'C':
+        
+
+    
         default:
             cleanup_stuff(argv, sockets);
             return EXIT_FAILURE;
@@ -179,9 +184,30 @@ int main(int argc, char **argv)
      * HINT: Note that the 'child_function' expects struct of type child_config.
      * ------------------------------------------------------
      **/
+    int status=0;
+    char *stack;                    /* Start of stack buffer */
+    char *stackTop;                 /* End of stack buffer */
+    
+    stack = malloc(1024*1024);
 
-        // You code for clone() goes here
+      if (stack == NULL){
+         exit(1);
+      }
+    stackTop = stack + STACK_SIZE;
 
+    child_pid = clone(child_function,stackTop, CLONE_NEWCGROUP | CLONE_NEWIPC |CLONE_NEWNET | CLONE_NEWNS | CLONE_NEWPID | CLONE_NEWUTS | SIGCHLD, config);
+      if (child_pid < 0){
+         /* The clone failed.  Report failure.  */
+         perror("The clone failed. \n");
+         status = -1;
+      }
+      else{
+        /* This is the parent process.  Wait for the child to complete.  */
+        child_pid = wait(NULL); /* reaping parent */
+        status = -1;
+         return status;
+        exit(1);
+    }
     /**
      *  ------------------------------------------------------
      **/ 
