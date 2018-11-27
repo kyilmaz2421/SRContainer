@@ -17,8 +17,8 @@
  *  See the example 'cgroups_control' added to the array of controls - 'cgroups' - below
  **/  
 struct cgroup_setting self_to_task = {
-	.name = "tasks",
-	.value = "0"
+    .name = "tasks",
+    .value = "0"
 };
 
 /**
@@ -63,8 +63,15 @@ int main(int argc, char **argv)
     pid_t child_pid = 0;
     int last_optind = 0;
     bool found_cflag = false;
+    *cgroups = (struct cgroups_control *) malloc(6* sizeof(struct cgroups_control));
+      struct cgroup_setting *setting;
+      setting =  malloc(3*sizeof(struct cgroup_setting));
+
+    //struct cgroup_setting* setting = (struct cgroup_setting*) malloc(2*sizeof(struct cgroup_setting));
     while ((option = getopt(argc, argv, "C:s:p:M:r:w:H:m:u:c")))
     {
+      // *cgroups = malloc(sizeof(struct cgroups_control));
+
         if (found_cflag)
             break;
 
@@ -87,9 +94,67 @@ int main(int argc, char **argv)
             }
             break;
         case 'C':
-        
 
-    
+        strcpy(cgroups[i]->control,CGRP_CPU_CONTROL);
+        strcpy(setting->name,"cpu.shares");
+        strcpy(setting->value,optarg);
+        cgroups[i]->settings[0]=setting;
+        cgroups[i]->settings[1]= &self_to_task;
+        cgroups[i]->settings[2] = NULL;
+        i++;
+
+        case 's':
+
+        strcpy(cgroups[i]->control,CGRP_CPU_CONTROL);
+        strcpy(setting->name,"cpu.cpus");
+        strcpy(setting->value,optarg);
+        cgroups[i]->settings[0]=setting;
+        cgroups[i]->settings[1]= &self_to_task;
+        cgroups[i]->settings[2] = NULL;
+        i++;                               
+
+        case 'p':
+
+        strcpy(cgroups[i]->control,CGRP_CPU_CONTROL);
+        strcpy(setting->name,"pid.count");
+        strcpy(setting->value,optarg);
+        cgroups[i]->settings[0]=setting;
+        cgroups[i]->settings[1]= &self_to_task;
+        cgroups[i]->settings[2] = NULL;
+        i++;
+
+        case 'M':
+
+        strcpy(cgroups[i]->control,CGRP_CPU_CONTROL);
+        strcpy(setting->name,"memory.limit");
+        strcpy(setting->value,optarg);
+        cgroups[i]->settings[0]=setting;
+        cgroups[i]->settings[1]= &self_to_task;
+        cgroups[i]->settings[2] = NULL;
+        i++;
+
+        case 'r':
+
+        strcpy(cgroups[i]->control,CGRP_CPU_CONTROL);
+        strcpy(setting->name,"blkio.weight");
+        strcpy(setting->value,optarg);
+        cgroups[i]->settings[0]=setting;
+        cgroups[i]->settings[1]= &self_to_task;
+        cgroups[i]->settings[2] = NULL;
+        i++;
+
+        case 'w':
+        strcpy(cgroups[i]->control,CGRP_CPU_CONTROL);
+        strcpy(setting->name,"blkio.weight");
+        strcpy(setting->value,optarg);
+        cgroups[i]->settings[0]=setting;
+        cgroups[i]->settings[1]= &self_to_task;
+        cgroups[i]->settings[2] = NULL;
+        i++;
+
+        case 'H':
+        strcpy(config.hostname, optarg);
+
         default:
             cleanup_stuff(argv, sockets);
             return EXIT_FAILURE;
@@ -97,6 +162,7 @@ int main(int argc, char **argv)
         last_optind = optind;
     }
 
+    cgroups[5] = NULL;
     if (!config.argc || !config.mount_dir){
         cleanup_stuff(argv, sockets);
         return EXIT_FAILURE;
@@ -182,7 +248,7 @@ int main(int argc, char **argv)
       }
     stackTop = stack + STACK_SIZE;
 
-    child_pid = clone(child_function,stackTop, CLONE_NEWCGROUP | CLONE_NEWIPC |CLONE_NEWNET | CLONE_NEWNS | CLONE_NEWPID | CLONE_NEWUTS | SIGCHLD, config);
+    child_pid = clone(child_function,stackTop, CLONE_NEWCGROUP | CLONE_NEWIPC |CLONE_NEWNET | CLONE_NEWNS | CLONE_NEWPID | CLONE_NEWUTS | SIGCHLD, &config);
       if (child_pid < 0){
          /* The clone failed.  Report failure.  */
          perror("The clone failed. \n");
