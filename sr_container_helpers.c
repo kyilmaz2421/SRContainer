@@ -45,21 +45,52 @@ int setup_child_capabilities(){
      **/
 
     
+    int drop_caps[] = {CAP_AUDIT_CONTROL, CAP_AUDIT_READ, CAP_AUDIT_WRITE, CAP_BLOCK_SUSPEND, CAP_DAC_READ_SEARCH, 
+        CAP_FSETID, CAP_IPC_LOCK, CAP_MAC_ADMIN, CAP_MAC_OVERRIDE, CAP_MKNOD, CAP_SETFCAP, CAP_SYSLOG, CAP_SYS_ADMIN, 
+        CAP_SYS_BOOT, CAP_SYS_MODULE, CAP_SYS_NICE, CAP_SYS_RAWIO, CAP_SYS_RESOURCE, CAP_SYS_TIME, CAP_WAKE_ALARM};
+
+    size_t num_caps_to_drop = 20;
 
 
+    // dropping the capabilities from the AMBIENT CAPABILITY SET
 
+    for(size_t i = 0; i < num_caps_to_drop; i++){
 
+        if(prctl(PR_CAPBSET_DROP, drop_caps[i], 0, 0, 0)){
+            fprint(stderr, "prctl filaed: %m\n");
+            return 1;
+        }
 
+    }
 
+    // get the capability state of the process; returns all the different capability sets
+    cap_t caps = cap_get_proc();
+    if(caps == NULL){
+        perror("cap_get_proc");
+        if(caps){
+            cap_free(caps);
+        }
+        return EXIT_FAILURE;
+    }
 
+    // clear our (20) capabilities from the INHERITABLE SET
+    int clear_inh_set = cap_set_flag(caps, CAP_INHERITABLE, num_caps_to_drop, drop_caps, CAP_CLEAR);
+    if (clear_inh_set){
+        perror("cap_set_flag");
+        cap_free(caps);
+        return EXIT_FAILURE;
+    }
 
+    // set the cleared caps-structure as the processes' new capability set 
+    int set_cap_set = cap_set_proc(caps);
+    if (set_cap_set){
+        perror("cap_set_proc");
+        cap_free(caps);
+        return EXIT_FAILURE;
+    }
 
+    cap_free(caps);
 
-
-
-
-
-    return 0;
 }
 
 /**
@@ -70,34 +101,19 @@ int setup_child_capabilities(){
  **/ 
 int setup_syscall_filters(){
 
-filter_set_status = seccomp_rule_add(
-                                    seccomp_ctx,                    // the context to which the rule applies
-                                    SCMP_FAIL,                  // action to take on rule match
-                                    SCMP_SYS(unshare),              // get the sys_call number using SCMP_SYS() macro
-                                    1,                              // any additional argument matches
-                                    SCMP_A0(SCMP_CMP_MASKED_EQ, CLONE_NEWUSER, CLONE_NEWUSER)
-                                    );
-if (filter_set_status) {
-    if (seccomp_ctx)
-        seccomp_release(seccomp_ctx);
-    fprintf(stderr, "seccomp could not add KILL rule for 'unshare': %m\n");
-    return EXIT_FAILURE;
-}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+// filter_set_status = seccomp_rule_add(
+//                                     seccomp_ctx,                    // the context to which the rule applies
+//                                     SCMP_FAIL,                  // action to take on rule match
+//                                     SCMP_SYS(unshare),              // get the sys_call number using SCMP_SYS() macro
+//                                     1,                              // any additional argument matches
+//                                     SCMP_A0(SCMP_CMP_MASKED_EQ, CLONE_NEWUSER, CLONE_NEWUSER)
+//                                     );
+// if (filter_set_status) {
+//     if (seccomp_ctx)
+//         seccomp_release(seccomp_ctx);
+//     fprintf(stderr, "seccomp could not add KILL rule for 'unshare': %m\n");
+//     return EXIT_FAILURE;
+// }
 
 
     return 0;
