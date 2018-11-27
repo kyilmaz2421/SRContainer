@@ -117,7 +117,7 @@ int main(int argc, char **argv)
 
         case 's':
 
-        strcpy(cgroups[i]->control,CGRP_CPU_CONTROL);
+        strcpy(cgroups[i]->control,CGRP_CPU_SET_CONTROL);
         strcpy(setting->name,"cpu.cpus");
         strcpy(setting->value,optarg);
         cgroups[i]->settings[0]=setting;
@@ -127,7 +127,7 @@ int main(int argc, char **argv)
 
         case 'p':
 
-        strcpy(cgroups[i]->control,CGRP_CPU_CONTROL);
+        strcpy(cgroups[i]->control,CGRP_PIDS_CONTROL);
         strcpy(setting->name,"pid.count");
         strcpy(setting->value,optarg);
         cgroups[i]->settings[0]=setting;
@@ -137,7 +137,7 @@ int main(int argc, char **argv)
 
         case 'M':
 
-        strcpy(cgroups[i]->control,CGRP_CPU_CONTROL);
+        strcpy(cgroups[i]->control,CGRP_MEMORY_CONTROL);
         strcpy(setting->name,"memory.limit");
         strcpy(setting->value,optarg);
         cgroups[i]->settings[0]=setting;
@@ -147,7 +147,7 @@ int main(int argc, char **argv)
 
         case 'r':
 
-        strcpy(cgroups[i]->control,CGRP_CPU_CONTROL);
+        strcpy(cgroups[i]->control,CGRP_BLKIO_CONTROL);
         strcpy(setting->name,"blkio.weight");
         strcpy(setting->value,optarg);
         cgroups[i]->settings[0]=setting;
@@ -156,7 +156,7 @@ int main(int argc, char **argv)
         i++;
 
         case 'w':
-        strcpy(cgroups[i]->control,CGRP_CPU_CONTROL);
+        strcpy(cgroups[i]->control,CGRP_BLKIO_CONTROL);
         strcpy(setting->name,"blkio.weight");
         strcpy(setting->value,optarg);
         cgroups[i]->settings[0]=setting;
