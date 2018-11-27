@@ -32,8 +32,7 @@ int switch_child_root(const char *new_root, const char *put_old)
  *      Complete this method as described in the assingment handout to disable a list of capabilities
  * ------------------------------------------------------
  **/ 
-int setup_child_capabilities()
-{
+int setup_child_capabilities(){
     /**
      *  Follow these steps to check if you successfully set the capabilities
      *      Copy the binary 'capsh' found inside the [/sbin] folder of the docker container
@@ -44,6 +43,22 @@ int setup_child_capabilities()
      *      will indicate many capabilities. But after properly implementing this method if you run the same
      *      command inside your container you will see a smaller set of capabilities for [Bounding set]
      **/
+
+    
+
+
+
+
+
+
+
+
+
+
+
+
+
+
     return 0;
 }
 
@@ -53,8 +68,38 @@ int setup_child_capabilities()
  *      Complete this method as described in the assingment handout to restrict a list of system calls
  * ------------------------------------------------------
  **/ 
-int setup_syscall_filters()
-{
+int setup_syscall_filters(){
+
+filter_set_status = seccomp_rule_add(
+                                    seccomp_ctx,                    // the context to which the rule applies
+                                    SCMP_FAIL,                  // action to take on rule match
+                                    SCMP_SYS(unshare),              // get the sys_call number using SCMP_SYS() macro
+                                    1,                              // any additional argument matches
+                                    SCMP_A0(SCMP_CMP_MASKED_EQ, CLONE_NEWUSER, CLONE_NEWUSER)
+                                    );
+if (filter_set_status) {
+    if (seccomp_ctx)
+        seccomp_release(seccomp_ctx);
+    fprintf(stderr, "seccomp could not add KILL rule for 'unshare': %m\n");
+    return EXIT_FAILURE;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
     return 0;
 }
 

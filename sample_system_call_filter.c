@@ -41,6 +41,7 @@ if (filter_set_status) {
 }
 
 filter_set_status = seccomp_rule_add(seccomp_ctx, SCMP_FAIL, SCMP_SYS(ptrace), 0);
+
 if (filter_set_status) {
     if (seccomp_ctx)
         seccomp_release(seccomp_ctx);
