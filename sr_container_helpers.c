@@ -168,7 +168,7 @@ int setup_syscall_filters(){
 
     // syscall for chmod
     filter_set_status = seccomp_rule_add(seccomp_ctx, SCMP_FAIL, SCMP_SYS(chmod), 2, 
-                            SCMP_A1(SCMP_CMP_MASKED_EQ, S_ISUID, S_ISUID), SCMP_A0(SCMP_CMP_MASKED_EQ, S_ISGID, S_ISGID));
+                            SCMP_A1(SCMP_CMP_MASKED_EQ, S_ISUID, S_ISUID), SCMP_A1(SCMP_CMP_MASKED_EQ, S_ISGID, S_ISGID));
     if (filter_set_status) {
         if (seccomp_ctx)
             seccomp_release(seccomp_ctx);
