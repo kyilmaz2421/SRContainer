@@ -69,6 +69,7 @@ struct cgroups_control *cgroups[6] = {
  **/
 int main(int argc, char **argv)
 {
+
     struct child_config config = {0};
     int option = 0;
     int sockets[2] = {0};
@@ -76,16 +77,23 @@ int main(int argc, char **argv)
     int last_optind = 0;
     bool found_cflag = false;
     int i=0;
-    *cgroups = (struct cgroups_control *) malloc(6* sizeof(struct cgroups_control));
-      struct cgroup_setting *setting;
-      setting =  malloc(3*sizeof(struct cgroup_setting));
-
+  
+   // *cgroups = (struct cgroups_control *) malloc (sizeof(struct cgroups_control));
+     
+   struct cgroups_control *cpushares = NULL; 
+   struct cgroups_control *cpucpus = NULL;
+   struct cgroups_control *pidcount = NULL;
+   struct cgroups_control *memlim = NULL;
+   struct cgroups_control *blkio = NULL;
+   int k=0;
+   // struct cgroup_setting *setting;
+    //  setting =  malloc(3*sizeof(struct cgroup_setting));
     //struct cgroup_setting* setting = (struct cgroup_setting*) malloc(2*sizeof(struct cgroup_setting));
     while ((option = getopt(argc, argv, "C:s:p:M:r:w:H:m:u:c")))
     {
       // *cgroups = malloc(sizeof(struct cgroups_control));
-
-        if (found_cflag)
+        printf("enterED while\n");
+	if (found_cflag)
             break;
 
         switch (option)
@@ -107,46 +115,85 @@ int main(int argc, char **argv)
             }
             break;
         case 'C':
-
-        strcpy(cgroups[i]->control,CGRP_CPU_CONTROL);
-        strcpy(setting->name,"cpu.shares");
-        strcpy(setting->value,optarg);
-        cgroups[i]->settings[0]=setting;
-        cgroups[i]->settings[1]= &self_to_task;
-        cgroups[i]->settings[2] = NULL;
-        i++;
-
+		cpushares = (struct cgroups_control *)  malloc (sizeof(struct cgroups_control));
+        	cpushares->settings = (struct cgroup_setting**) malloc(3*sizeof(struct cgroup_setting));
+		k=0;
+		for (k=0; k<3; k++){
+			cpushares->settings[k] = malloc(sizeof(struct cgroup_setting));
+		}	
+		strcpy(cpushares->control,CGRP_CPU_CONTROL);
+        	strcpy(cpushares->settings[0]->name,"cpu.shares");
+        	strcpy(cpushares->settings[0]->value,optarg);
+        	cpushares->settings[1]= &self_to_task;
+        	cpushares->settings[2] = NULL;
+		k=0;
+		while(cgroups[k]!=NULL){
+			k++;
+		}       
+		cgroups[k] = cpushares;
+		cgroups[k+1] = NULL;
+		printf("been at C \n");
+		break;
         case 's':
-
-        strcpy(cgroups[i]->control,CGRP_CPU_SET_CONTROL);
-        strcpy(setting->name,"cpu.cpus");
-        strcpy(setting->value,optarg);
-        cgroups[i]->settings[0]=setting;
-        cgroups[i]->settings[1]= &self_to_task;
-        cgroups[i]->settings[2] = NULL;
-        i++;                               
-
+                cpucpus = (struct cgroups_control *)  malloc (sizeof(struct cgroups_control));
+                cpucpus->settings = (struct cgroup_setting**) malloc(3*sizeof(struct cgroup_setting));
+                k=0;
+                for (k=0; k<3; k++){
+                        cpucpus->settings[k] = malloc(sizeof(struct cgroup_setting));
+                }
+                strcpy(cpucpus->control,CGRP_CPU_CONTROL);
+                strcpy(cpucpus->settings[0]->name,"cpu.cpus");
+                strcpy(cpucpus->settings[0]->value,optarg);
+                cpucpus->settings[1]= &self_to_task;
+                cpucpus->settings[2] = NULL;
+                k=0;
+                while(cgroups[k]!=NULL){
+                        k++;
+                }
+                cgroups[k] = cpucpus;
+                cgroups[k+1] = NULL;
+                break;
         case 'p':
-
-        strcpy(cgroups[i]->control,CGRP_PIDS_CONTROL);
-        strcpy(setting->name,"pid.count");
-        strcpy(setting->value,optarg);
-        cgroups[i]->settings[0]=setting;
-        cgroups[i]->settings[1]= &self_to_task;
-        cgroups[i]->settings[2] = NULL;
-        i++;
+		pidcount = (struct cgroups_control *)  malloc (sizeof(struct cgroups_control));
+                pidcount->settings = (struct cgroup_setting**) malloc(3*sizeof(struct cgroup_setting));
+                k=0;
+                for (k=0; k<3; k++){
+                        pidcount->settings[k] = malloc(sizeof(struct cgroup_setting));
+                }
+                strcpy(pidcount->control,CGRP_CPU_CONTROL);
+                strcpy(pidcount->settings[0]->name,"pid.count");
+                strcpy(cpucpus->settings[0]->value,optarg);
+                pidcount->settings[1]= &self_to_task;
+                pidcount->settings[2] = NULL;
+                k=0;
+                while(cgroups[k]!=NULL){
+                        k++;
+                }
+                cgroups[k] = pidcount;
+                cgroups[k+1] = NULL;
+                break;
 
         case 'M':
-
-        strcpy(cgroups[i]->control,CGRP_MEMORY_CONTROL);
-        strcpy(setting->name,"memory.limit");
-        strcpy(setting->value,optarg);
-        cgroups[i]->settings[0]=setting;
-        cgroups[i]->settings[1]= &self_to_task;
-        cgroups[i]->settings[2] = NULL;
-        i++;
-
-        case 'r':
+	        memlim = (struct cgroups_control *)  malloc (sizeof(struct cgroups_control));
+                memlim->settings = (struct cgroup_setting**) malloc(3*sizeof(struct cgroup_setting));
+                k=0;
+                for (k=0; k<3; k++){
+                        memlim->settings[k] = malloc(sizeof(struct cgroup_setting));
+                }
+                strcpy(memlim->control,CGRP_CPU_CONTROL);
+                strcpy(memlim->settings[0]->name,"memory.limit");
+                strcpy(cpucpus->settings[0]->value,optarg);
+                memlim->settings[1]= &self_to_task;
+                memlim->settings[2] = NULL;
+                k=0;
+                while(cgroups[k]!=NULL){
+                        k++;
+                }
+                cgroups[k] = memlim;
+                cgroups[k+1] = NULL;
+                break;
+		
+	case 'r':
 
         strcpy(cgroups[i]->control,CGRP_BLKIO_CONTROL);
         strcpy(setting->name,"blkio.weight");
@@ -155,7 +202,7 @@ int main(int argc, char **argv)
         cgroups[i]->settings[1]= &self_to_task;
         cgroups[i]->settings[2] = NULL;
         i++;
-
+printf("been at r \n");
         case 'w':
         strcpy(cgroups[i]->control,CGRP_BLKIO_CONTROL);
         strcpy(setting->name,"blkio.weight");
@@ -164,10 +211,10 @@ int main(int argc, char **argv)
         cgroups[i]->settings[1]= &self_to_task;
         cgroups[i]->settings[2] = NULL;
         i++;
-
+printf("been at W \n");
         case 'H':
-        strcpy(config.hostname, optarg);
-
+        config.hostname = optarg;
+printf("been at H \n");
         default:
             cleanup_stuff(argv, sockets);
             return EXIT_FAILURE;

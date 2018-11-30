@@ -321,6 +321,21 @@ int setup_cgroup_controls(struct child_config *config, struct cgroups_control **
 int free_cgroup_controls(struct child_config *config, struct cgroups_control **cgrps)
 {
     fprintf(stderr, "####### > cleaning cgroups...");
+    int i=0;
+    for (struct cgroups_control **cgrp = cgrps; *cgrp; cgrp++)
+    {
+	       char dir[PATH_MAX] = {0};
+        char task[PATH_MAX] = {0};
+	    printf("iteration %d",i);
+	    i++;
+    if (snprintf(dir, sizeof(dir), "/sys/fs/cgroup/%s/%s",
+                     (*cgrp)->control, config->hostname) == -1 ||
+            snprintf(task, sizeof(task), "/sys/fs/cgroup/%s/tasks",
+                     (*cgrp)->control) == -1)
+        {
+		
+	}
+    }
     for (struct cgroups_control **cgrp = cgrps; *cgrp; cgrp++)
     {
         char dir[PATH_MAX] = {0};
@@ -334,6 +349,9 @@ int free_cgroup_controls(struct child_config *config, struct cgroups_control **c
             fprintf(stderr, "invocation to snprintf() failed: %m\n");
             return -1;
         }
+	printf("DIR: %s \n",dir);
+	   printf("TASK: %s \n",task);
+
         if ((task_fd = open(task, O_WRONLY)) == -1)
         {
             fprintf(stderr, "invocation to open() %s failed: %m\n", task);
