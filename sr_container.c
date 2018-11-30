@@ -76,16 +76,13 @@ int main(int argc, char **argv)
     pid_t child_pid = 0;
     int last_optind = 0;
     bool found_cflag = false;
-    int i=0;
-  
-   // *cgroups = (struct cgroups_control *) malloc (sizeof(struct cgroups_control));
-     
-   struct cgroups_control *cpushares = NULL; 
-   struct cgroups_control *cpucpus = NULL;
-   struct cgroups_control *pidcount = NULL;
-   struct cgroups_control *memlim = NULL;
-   struct cgroups_control *blkio = NULL;
-   int k=0;
+   
+    struct cgroups_control *cpushares = NULL; 
+    struct cgroups_control *cpucpus = NULL;
+    struct cgroups_control *pidcount = NULL;
+    struct cgroups_control *memlim = NULL;
+    struct cgroups_control *blkio = NULL;
+    int k=0;
    // struct cgroup_setting *setting;
     //  setting =  malloc(3*sizeof(struct cgroup_setting));
     //struct cgroup_setting* setting = (struct cgroup_setting*) malloc(2*sizeof(struct cgroup_setting));
@@ -161,7 +158,7 @@ int main(int argc, char **argv)
                         pidcount->settings[k] = malloc(sizeof(struct cgroup_setting));
                 }
                 strcpy(pidcount->control,CGRP_CPU_CONTROL);
-                strcpy(pidcount->settings[0]->name,"pid.count");
+                strcpy(pidcount->settings[0]->name,"pids.max");
                 strcpy(cpucpus->settings[0]->value,optarg);
                 pidcount->settings[1]= &self_to_task;
                 pidcount->settings[2] = NULL;
@@ -175,7 +172,7 @@ int main(int argc, char **argv)
 
         case 'M':
 	        memlim = (struct cgroups_control *)  malloc (sizeof(struct cgroups_control));
-                memlim->settings = (struct cgroup_setting**) malloc(3*sizeof(struct cgroup_setting));
+                memlim->settings = (struct cgroup_setting**) malloc(3*sizeof(struct cgroup_setting*));
                 k=0;
                 for (k=0; k<3; k++){
                         memlim->settings[k] = malloc(sizeof(struct cgroup_setting));
@@ -194,25 +191,55 @@ int main(int argc, char **argv)
                 break;
 		
 	case 'r':
+		if(blkio == NULL){
+	        	blkio = (struct cgroups_control *)  malloc (sizeof(struct cgroups_control));
+                	blkio->settings = (struct cgroup_setting**) malloc(4*sizeof(struct cgroup_setting*));
+                	k=0;
+                	for (k=0; k<4; k++){
+                       		 blkio->settings[k] = malloc(sizeof(struct cgroup_setting));
+                	}
+                	strcpy(blkio->settings[0]->name,cgroups[0]->settings[0]->name);
+			strcpy(blkio->settings[0]->value,cgroups[0]->settings[0]->value);
+			strcpy(blkio->settings[1]->name,"blkio.throttle.read_iops_device");
+			strcpy(blkio->settings[1]->value,optarg);
+			blkio->settings[2] = &self_to_task;
+			blkio->settings[3] = NULL;
+		}
+		else{
+		 	blkio->settings = (struct cgroup_setting**) realloc(blkio->settings,5*sizeof(struct cgroup_setting*));
+		   	blkio->settings[3] = malloc(sizeof(struct cgroup_setting));
+		   	strcpy(blkio->settings[3]->name,"blkio.throttle.read_iops_device");
+               		strcpy(blkio->settings[3]->value,optarg);
+			blkio->settings[4] = NULL;
+		}	
+                break;
 
-        strcpy(cgroups[i]->control,CGRP_BLKIO_CONTROL);
-        strcpy(setting->name,"blkio.weight");
-        strcpy(setting->value,optarg);
-        cgroups[i]->settings[0]=setting;
-        cgroups[i]->settings[1]= &self_to_task;
-        cgroups[i]->settings[2] = NULL;
-        i++;
-printf("been at r \n");
+
         case 'w':
-        strcpy(cgroups[i]->control,CGRP_BLKIO_CONTROL);
-        strcpy(setting->name,"blkio.weight");
-        strcpy(setting->value,optarg);
-        cgroups[i]->settings[0]=setting;
-        cgroups[i]->settings[1]= &self_to_task;
-        cgroups[i]->settings[2] = NULL;
-        i++;
-printf("been at W \n");
-        case 'H':
+		if(blkio == NULL){
+                	blkio = (struct cgroups_control *)  malloc (sizeof(struct cgroups_control));
+                	blkio->settings = (struct cgroup_setting**) malloc(4*sizeof(struct cgroup_setting*));
+                	k=0;
+                	for (k=0; k<4; k++){
+                        	blkio->settings[k] = malloc(sizeof(struct cgroup_setting));
+                	}	
+                	strcpy(blkio->settings[0]->name,cgroups[0]->settings[0]->name);
+                	strcpy(blkio->settings[0]->value,cgroups[0]->settings[0]->value);
+                	strcpy(blkio->settings[1]->name,"blkio.throttle.write_iops_device");
+                	strcpy(blkio->settings[1]->value,optarg);
+                	blkio->settings[2] = &self_to_task;
+                	blkio->settings[3] = NULL;
+                }
+                else{
+                	blkio->settings = (struct cgroup_setting**) realloc(blkio->settings,5*sizeof(struct cgroup_setting*));
+                   	blkio->settings[3] = malloc(sizeof(struct cgroup_setting));
+                   	strcpy(blkio->settings[3]->name,"blkio.throttle.write_iops_device");
+                	strcpy(blkio->settings[3]->value,optarg);
+                 	blkio->settings[4] = NULL;
+		} 
+                break;
+   
+   	case 'H':
         config.hostname = optarg;
 printf("been at H \n");
         default:
