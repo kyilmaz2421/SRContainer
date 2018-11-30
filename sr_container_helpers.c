@@ -17,13 +17,9 @@ int switch_child_root(const char *new_root, const char *put_old)
      *  Simply use the "pivot_root()" system call to switch child's root to the new root
      *  ------------------------------------------------------
      * */ 
-    int result = pivot_root(new_root, put_old);
-    if(result < 0){
-        perror("pivot_root error!");
-    }
-    else{
-    return 0;
-    }
+    pid_t result = syscall(SYS_pivot_root, new_root, put_old);
+  
+        return result;
 }
 
 /**
@@ -32,9 +28,64 @@ int switch_child_root(const char *new_root, const char *put_old)
  *      Complete this method as described in the assingment handout to disable a list of capabilities
  * ------------------------------------------------------
  **/ 
-int setup_child_capabilities()
-{
-    return 0;
+int setup_child_capabilities(){
+    /**
+     *  Follow these steps to check if you successfully set the capabilities
+     *      Copy the binary 'capsh' found inside the [/sbin] folder of the docker container
+     *          into the [/sbin] folder of the 'rootfs' you downloaded to run containers
+     *              cp /sbin/capsh $ROOTFS/sbin/
+     *  
+     *  Now if you run 'capsh --print' without this method implemented the output for [Bounding set]
+     *      will indicate many capabilities. But after properly implementing this method if you run the same
+     *      command inside your container you will see a smaller set of capabilities for [Bounding set]
+     **/
+
+    
+    int drop_caps[] = {CAP_AUDIT_CONTROL, CAP_AUDIT_READ, CAP_AUDIT_WRITE, CAP_BLOCK_SUSPEND, CAP_DAC_READ_SEARCH, 
+        CAP_FSETID, CAP_IPC_LOCK, CAP_MAC_ADMIN, CAP_MAC_OVERRIDE, CAP_MKNOD, CAP_SETFCAP, CAP_SYSLOG, CAP_SYS_ADMIN, 
+        CAP_SYS_BOOT, CAP_SYS_MODULE, CAP_SYS_NICE, CAP_SYS_RAWIO, CAP_SYS_RESOURCE, CAP_SYS_TIME, CAP_WAKE_ALARM};
+
+    size_t num_caps_to_drop = 20;
+
+
+    // dropping the capabilities from the AMBIENT CAPABILITY SET
+    for(size_t i = 0; i < num_caps_to_drop; i++){
+
+        if(prctl(PR_CAPBSET_DROP, drop_caps[i], 0, 0, 0)){
+            fprintf(stderr, "prctl filaed: %m\n");
+            return 1;
+        }
+
+    }
+
+    // get the capability state of the process; returns all the different capability sets
+    cap_t caps = cap_get_proc();
+    if(caps == NULL){
+        perror("cap_get_proc");
+        if(caps){
+            cap_free(caps);
+        }
+        return EXIT_FAILURE;
+    }
+
+    // clear our (20) capabilities from the INHERITABLE SET
+    int clear_inh_set = cap_set_flag(caps, CAP_INHERITABLE, num_caps_to_drop, drop_caps, CAP_CLEAR);
+    if (clear_inh_set){
+        perror("cap_set_flag");
+        cap_free(caps);
+        return EXIT_FAILURE;
+    }
+
+    // set the cleared caps-structure as the processes' new capability set 
+    int set_cap_set = cap_set_proc(caps);
+    if (set_cap_set){
+        perror("cap_set_proc");
+        cap_free(caps);
+        return EXIT_FAILURE;
+    }
+
+    cap_free(caps);
+   return 0;
 }
 
 /**
@@ -43,8 +94,102 @@ int setup_child_capabilities()
  *      Complete this method as described in the assingment handout to restrict a list of system calls
  * ------------------------------------------------------
  **/ 
-int setup_syscall_filters()
-{
+int setup_syscall_filters(){
+
+    // a system call that filters context with a default behaviour for all system calls
+    scmp_filter_ctx seccomp_ctx = seccomp_init(SCMP_ACT_ALLOW);     
+    if (!seccomp_ctx) {
+        fprintf(stderr, "seccomp initialization failed: %m\n");
+        return EXIT_FAILURE;
+    }
+
+    /* set up filters for the following system calls: ptrace, mbind, migrate_pages, move_pages
+        systems call filters with special restrictions: unshare and clone (only if the CLONE_NEWUSER flag is used), 
+                                                chmod (only if the S_ISUID or S_ISGID flags are used for the "mode" argument)
+    */
+
+    // syscall filter for ptrace
+    int filter_set_status = seccomp_rule_add(seccomp_ctx, SCMP_FAIL, SCMP_SYS(ptrace), 0);
+    if (filter_set_status) {
+        if (seccomp_ctx)
+            seccomp_release(seccomp_ctx);
+        fprintf(stderr, "seccomp could not add KILL rule for 'ptrace': %m\n");
+        return EXIT_FAILURE;
+    }
+
+    // syscall filter for mbind
+    filter_set_status = seccomp_rule_add(seccomp_ctx, SCMP_FAIL, SCMP_SYS(mbind), 0);
+    if (filter_set_status) {
+        if (seccomp_ctx)
+            seccomp_release(seccomp_ctx);
+        fprintf(stderr, "seccomp could not add KILL rule for 'mbind': %m\n");
+        return EXIT_FAILURE;
+    }
+
+    // syscall filter for migrate_pages
+    filter_set_status = seccomp_rule_add(seccomp_ctx, SCMP_FAIL, SCMP_SYS(migrate_pages), 0);
+    if (filter_set_status) {
+        if (seccomp_ctx)
+            seccomp_release(seccomp_ctx);
+        fprintf(stderr, "seccomp could not add KILL rule for 'migrate_pages': %m\n");
+        return EXIT_FAILURE;
+    }
+
+    // syscall filter for move_pages
+    filter_set_status = seccomp_rule_add(seccomp_ctx, SCMP_FAIL, SCMP_SYS(move_pages), 0);
+    if (filter_set_status) {
+        if (seccomp_ctx)
+            seccomp_release(seccomp_ctx);
+        fprintf(stderr, "seccomp could not add KILL rule for 'move_pages': %m\n");
+        return EXIT_FAILURE;
+    }
+
+    // syscall filter for unshare 
+    filter_set_status = seccomp_rule_add(seccomp_ctx, SCMP_FAIL, SCMP_SYS(unshare), 1, SCMP_A0(SCMP_CMP_MASKED_EQ, CLONE_NEWUSER, CLONE_NEWUSER));
+    if (filter_set_status) {
+        if (seccomp_ctx)
+            seccomp_release(seccomp_ctx);
+        fprintf(stderr, "seccomp could not add KILL rule for 'unshare': %m\n");
+        return EXIT_FAILURE;
+    }
+
+    // syscall filter for clone
+    filter_set_status = seccomp_rule_add(seccomp_ctx, SCMP_FAIL, SCMP_SYS(clone), 1, SCMP_A2(SCMP_CMP_MASKED_EQ, CLONE_NEWUSER, CLONE_NEWUSER));
+    if (filter_set_status) {
+        if (seccomp_ctx)
+            seccomp_release(seccomp_ctx);
+        fprintf(stderr, "seccomp could not add KILL rule for 'clone': %m\n");
+        return EXIT_FAILURE;
+    }
+
+    // syscall for chmod
+    filter_set_status = seccomp_rule_add(seccomp_ctx, SCMP_FAIL, SCMP_SYS(chmod), 2, 
+                            SCMP_A1(SCMP_CMP_MASKED_EQ, S_ISUID, S_ISUID), SCMP_A1(SCMP_CMP_MASKED_EQ, S_ISGID, S_ISGID));
+    if (filter_set_status) {
+        if (seccomp_ctx)
+            seccomp_release(seccomp_ctx);
+        fprintf(stderr, "seccomp could not add KILL rule for 'chmod': %m\n");
+        return EXIT_FAILURE;
+    }
+
+
+    // set the filter attribute value of SCMP_FLTATR_CTL_NNP
+    filter_set_status = seccomp_attr_set(seccomp_ctx, SCMP_FLTATR_CTL_NNP, 0);
+    if (filter_set_status) {
+        if (seccomp_ctx)
+            seccomp_release(seccomp_ctx);
+        fprintf(stderr, "seccomp could not set attribute 'SCMP_FLTATR_CTL_NNP': %m\n");
+        return EXIT_FAILURE;
+    }
+
+    // load the created context into the kernel and releases the current process memory
+    filter_set_status = seccomp_load(seccomp_ctx);
+    if (filter_set_status) {
+        if (seccomp_ctx)
+            seccomp_release(seccomp_ctx);
+        fprintf(stderr, "seccomp could not load the new context: %m\n");
+        return EXIT_FAILURE;
+    }
     return 0;
 }
 
@@ -108,6 +253,11 @@ int setup_child_mounts(struct child_config *config)
         fprintf(stderr, "invocation to rmdir() failed! %m\n");
         return -1;
     }
+    
+    if (mount(NULL, "/proc", "proc", 0, NULL)) {
+		fprintf(stderr, "attempt to mount proc failed!\n");
+		return -1;
+	}
     fprintf(stderr, "successfully setup child mounts.\n");
     return 0;
 }

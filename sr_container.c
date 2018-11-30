@@ -17,8 +17,8 @@
  *  See the example 'cgroups_control' added to the array of controls - 'cgroups' - below
  **/  
 struct cgroup_setting self_to_task = {
-	.name = "tasks",
-	.value = "0"
+    .name = "tasks",
+    .value = "0"
 };
 
 /**
@@ -29,7 +29,7 @@ struct cgroup_setting self_to_task = {
  *      in the comments for the main() below
  *  ------------------------------------------------------
  **/ 
-struct cgroups_control *cgroups[5] = {
+struct cgroups_control *cgroups[6] = {
 	& (struct cgroups_control) {
 		.control = CGRP_BLKIO_CONTROL,
 		.settings = (struct cgroup_setting *[]) {
@@ -41,51 +41,9 @@ struct cgroups_control *cgroups[5] = {
 			NULL                       // NULL at the end of the array
 		}
 	},
-    & (struct cgroups_control) {
-		.control = CGRP_PIDS_CONTROL,
-		.settings = (struct cgroup_setting *[]) {
-			& (struct cgroup_setting) {
-				.name = "pid.limit",
-				.value = "64"
-			},
-			&self_to_task,             // must be added to all the new controls added
-			NULL                       // NULL at the end of the array
-		}
-	},
-    & (struct cgroups_control) {
-		.control = CGRP_CPU_SET_CONTROL,
-		.settings = (struct cgroup_setting *[]) {
-			& (struct cgroup_setting) {
-				.name = "cpuset.limit",
-				.value = "1"
-			},
-			&self_to_task,             // must be added to all the new controls added
-			NULL                       // NULL at the end of the array
-		}
-	},
-        & (struct cgroups_control) {
-		.control = CGRP_CPU_CONTROL,
-		.settings = (struct cgroup_setting *[]) {
-			& (struct cgroup_setting) {
-				.name = "cpushares.limit",
-				.value = "256"
-			},
-			&self_to_task,             // must be added to all the new controls added
-			NULL                       // NULL at the end of the array
-		}
-	},  
-          & (struct cgroups_control) {
-		.control = CGRP_MEMORY_CONTROL,
-		.settings = (struct cgroup_setting *[]) {
-			& (struct cgroup_setting) {
-				.name = "memory.limit",
-				.value = "1073741824"
-			},
-			&self_to_task,             // must be added to all the new controls added
-			NULL                       // NULL at the end of the array
-		}
-	},                             // NULL at the end of the array
+	NULL                               // NULL at the end of the array
 };
+
 
 /**
  *  ------------------------ TODO ------------------------
@@ -95,10 +53,10 @@ struct cgroups_control *cgroups[5] = {
  *          3. c : The initial process to run inside the container
  *  
  *   You must extend it to support the following flags:
- *          1. C : The cpu shares  t to be set (cpu-cgroup controller)
+ *          1. C : The cpu shares weight to be set (cpu-cgroup controller)
  *          2. s : The cpu cores to which the container must be restricted (cpuset-cgroup controller)
  *          3. p : The max number of process's allowed within a container (pid-cgroup controller)
- *          4. b : The blockIO weight (blkio-cgroup controller)
+ *          4. M : The memory consuption allowed in the container (memory-cgroup controller)
  *          5. r : The read IO rate in bytes (blkio-cgroup controller)
  *          6. w : The write IO rate in bytes (blkio-cgroup controller)
  *          7. H : The hostname of the container 
@@ -109,24 +67,24 @@ struct cgroups_control *cgroups[5] = {
  *   For 7 you have to just set the hostname parameter of the 'child_config' struct in the header file
  *  ------------------------------------------------------
  **/
-
-// struct child_config
-// {
-//     int argc;
-//     uid_t uid;
-//     int fd;
-//     char *hostname;
-//     char **argv;
-//     char *mount_dir;
-// };
-int main(int argc, char **argv){
+int main(int argc, char **argv)
+{
     struct child_config config = {0};
     int option = 0;
     int sockets[2] = {0};
     pid_t child_pid = 0;
     int last_optind = 0;
     bool found_cflag = false;
-    while ((option = getopt(argc, argv, "C:s:p:b:r:w:H:m:u:c"))){
+    int i=0;
+    *cgroups = (struct cgroups_control *) malloc(6* sizeof(struct cgroups_control));
+      struct cgroup_setting *setting;
+      setting =  malloc(3*sizeof(struct cgroup_setting));
+
+    //struct cgroup_setting* setting = (struct cgroup_setting*) malloc(2*sizeof(struct cgroup_setting));
+    while ((option = getopt(argc, argv, "C:s:p:M:r:w:H:m:u:c")))
+    {
+      // *cgroups = malloc(sizeof(struct cgroups_control));
+
         if (found_cflag)
             break;
 
@@ -147,10 +105,69 @@ int main(int argc, char **argv){
                 cleanup_stuff(argv, sockets);
                 return EXIT_FAILURE;
             }
+            break;
         case 'C':
 
+        strcpy(cgroups[i]->control,CGRP_CPU_CONTROL);
+        strcpy(setting->name,"cpu.shares");
+        strcpy(setting->value,optarg);
+        cgroups[i]->settings[0]=setting;
+        cgroups[i]->settings[1]= &self_to_task;
+        cgroups[i]->settings[2] = NULL;
+        i++;
 
-            break;
+        case 's':
+
+        strcpy(cgroups[i]->control,CGRP_CPU_SET_CONTROL);
+        strcpy(setting->name,"cpu.cpus");
+        strcpy(setting->value,optarg);
+        cgroups[i]->settings[0]=setting;
+        cgroups[i]->settings[1]= &self_to_task;
+        cgroups[i]->settings[2] = NULL;
+        i++;                               
+
+        case 'p':
+
+        strcpy(cgroups[i]->control,CGRP_PIDS_CONTROL);
+        strcpy(setting->name,"pid.count");
+        strcpy(setting->value,optarg);
+        cgroups[i]->settings[0]=setting;
+        cgroups[i]->settings[1]= &self_to_task;
+        cgroups[i]->settings[2] = NULL;
+        i++;
+
+        case 'M':
+
+        strcpy(cgroups[i]->control,CGRP_MEMORY_CONTROL);
+        strcpy(setting->name,"memory.limit");
+        strcpy(setting->value,optarg);
+        cgroups[i]->settings[0]=setting;
+        cgroups[i]->settings[1]= &self_to_task;
+        cgroups[i]->settings[2] = NULL;
+        i++;
+
+        case 'r':
+
+        strcpy(cgroups[i]->control,CGRP_BLKIO_CONTROL);
+        strcpy(setting->name,"blkio.weight");
+        strcpy(setting->value,optarg);
+        cgroups[i]->settings[0]=setting;
+        cgroups[i]->settings[1]= &self_to_task;
+        cgroups[i]->settings[2] = NULL;
+        i++;
+
+        case 'w':
+        strcpy(cgroups[i]->control,CGRP_BLKIO_CONTROL);
+        strcpy(setting->name,"blkio.weight");
+        strcpy(setting->value,optarg);
+        cgroups[i]->settings[0]=setting;
+        cgroups[i]->settings[1]= &self_to_task;
+        cgroups[i]->settings[2] = NULL;
+        i++;
+
+        case 'H':
+        strcpy(config.hostname, optarg);
+
         default:
             cleanup_stuff(argv, sockets);
             return EXIT_FAILURE;
@@ -158,6 +175,7 @@ int main(int argc, char **argv){
         last_optind = optind;
     }
 
+    cgroups[5] = NULL;
     if (!config.argc || !config.mount_dir){
         cleanup_stuff(argv, sockets);
         return EXIT_FAILURE;
@@ -243,7 +261,7 @@ int main(int argc, char **argv){
       }
     stackTop = stack + STACK_SIZE;
 
-    child_pid = clone(child_function,stackTop, CLONE_NEWCGROUP | CLONE_NEWIPC |CLONE_NEWNET | CLONE_NEWNS | CLONE_NEWPID | CLONE_NEWUTS | SIGCHLD, config);
+    child_pid = clone(child_function,stackTop, CLONE_NEWCGROUP | CLONE_NEWIPC |CLONE_NEWNET | CLONE_NEWNS | CLONE_NEWPID | CLONE_NEWUTS | SIGCHLD, &config);
       if (child_pid < 0){
          /* The clone failed.  Report failure.  */
          perror("The clone failed. \n");
@@ -256,8 +274,6 @@ int main(int argc, char **argv){
          return status;
         exit(1);
     }
-
-
     /**
      *  ------------------------------------------------------
      **/ 

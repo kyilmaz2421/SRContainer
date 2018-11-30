@@ -18,7 +18,7 @@ void cleanup_stuff(char *argv[], int sockets[2]) {
 }
 
 void print_usage(char *argv[]){
-    fprintf(stderr, "SRContainer usage: %s -u -1 -m . -c <process[eg:/bin/bash]> ~\n", argv[0]);
+    fprintf(stderr, "SRContainer usage: %s -u 1 -m . -c <process[eg:/bin/bash]>\n", argv[0]);
 }
 
 void cleanup_sockets(int sockets[2]) {
