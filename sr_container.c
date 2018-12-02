@@ -240,8 +240,8 @@ int main(int argc, char **argv)
                 break;
    
    	case 'H':
-        config.hostname = optarg;
-printf("been at H \n");
+        	config.hostname = optarg;
+		break;
         default:
             cleanup_stuff(argv, sockets);
             return EXIT_FAILURE;
