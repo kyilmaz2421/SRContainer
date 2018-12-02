@@ -88,9 +88,9 @@ int main(int argc, char **argv)
     //struct cgroup_setting* setting = (struct cgroup_setting*) malloc(2*sizeof(struct cgroup_setting));
     while ((option = getopt(argc, argv, "C:s:p:M:r:w:H:m:u:c")))
     {
-      // *cgroups = malloc(sizeof(struct cgroups_control));
-        printf("enterED while\n");
-	if (found_cflag)
+	printf("opatarhv %s and optiones %d and flagzz %d \n", optarg,option,found_cflag);
+
+   	if (found_cflag)
             break;
 
         switch (option)
@@ -240,8 +240,8 @@ int main(int argc, char **argv)
                 break;
    
    	case 'H':
-        config.hostname = optarg;
-printf("been at H \n");
+        	config.hostname = optarg;
+		break;
         default:
             cleanup_stuff(argv, sockets);
             return EXIT_FAILURE;
@@ -249,7 +249,10 @@ printf("been at H \n");
         last_optind = optind;
     }
 
+     
     cgroups[5] = NULL;
+    printf("mader outta them loops eh \n");
+
     if (!config.argc || !config.mount_dir){
         cleanup_stuff(argv, sockets);
         return EXIT_FAILURE;
@@ -324,7 +327,6 @@ printf("been at H \n");
      * HINT: Note that the 'child_function' expects struct of type child_config.
      * ------------------------------------------------------
      **/
-    int status=0;
     char *stack;                    /* Start of stack buffer */
     char *stackTop;                 /* End of stack buffer */
     
@@ -336,18 +338,7 @@ printf("been at H \n");
     stackTop = stack + STACK_SIZE;
 
     child_pid = clone(child_function,stackTop, CLONE_NEWCGROUP | CLONE_NEWIPC |CLONE_NEWNET | CLONE_NEWNS | CLONE_NEWPID | CLONE_NEWUTS | SIGCHLD, &config);
-      if (child_pid < 0){
-         /* The clone failed.  Report failure.  */
-         perror("The clone failed. \n");
-         status = -1;
-      }
-      else{
-        /* This is the parent process.  Wait for the child to complete.  */
-        child_pid = wait(NULL); /* reaping parent */
-        status = -1;
-         return status;
-        exit(1);
-    }
+      
     /**
      *  ------------------------------------------------------
      **/ 
