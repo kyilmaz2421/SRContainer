@@ -161,7 +161,7 @@ int main(int argc, char **argv)
                 }
                 strcpy(pidcount->control,CGRP_PIDS_CONTROL);
                 strcpy(pidcount->settings[0]->name,"pids.max");
-                strcpy(cpucpus->settings[0]->value,optarg);
+                strcpy(pidcount->settings[0]->value,optarg);
                 pidcount->settings[1]= &self_to_task;
                 pidcount->settings[2] = NULL;
                 k=0;
@@ -181,7 +181,7 @@ int main(int argc, char **argv)
                 }
                 strcpy(memlim->control,CGRP_MEMORY_CONTROL);
                 strcpy(memlim->settings[0]->name,"memory.limit");
-                strcpy(cpucpus->settings[0]->value,optarg);
+                strcpy(memlim->settings[0]->value,optarg);
                 memlim->settings[1]= &self_to_task;
                 memlim->settings[2] = NULL;
                 k=0;
