@@ -87,9 +87,7 @@ int main(int argc, char **argv)
     struct cgroups_control *memlim = NULL;
     struct cgroups_control *blkio = NULL;
     int k=0;
-   // struct cgroup_setting *setting;
-    //  setting =  malloc(3*sizeof(struct cgroup_setting));
-    //struct cgroup_setting* setting = (struct cgroup_setting*) malloc(2*sizeof(struct cgroup_setting));
+    
     while ((option = getopt(argc, argv, "C:s:p:M:r:w:H:m:u:c")))
     {
 	printf("opatarhv %s and optiones %d and flagzz %d \n", optarg,option,found_cflag);
@@ -142,7 +140,7 @@ int main(int argc, char **argv)
                 for (k=0; k<3; k++){
                         cpucpus->settings[k] = malloc(sizeof(struct cgroup_setting));
                 }
-                strcpy(cpucpus->control,CGRP_CPU_CONTROL);
+                strcpy(cpucpus->control,CGRP_CPU_SET_CONTROL);
                 strcpy(cpucpus->settings[0]->name,"cpu.cpus");
                 strcpy(cpucpus->settings[0]->value,optarg);
                 cpucpus->settings[1]= &self_to_task;
@@ -161,7 +159,7 @@ int main(int argc, char **argv)
                 for (k=0; k<3; k++){
                         pidcount->settings[k] = malloc(sizeof(struct cgroup_setting));
                 }
-                strcpy(pidcount->control,CGRP_CPU_CONTROL);
+                strcpy(pidcount->control,CGRP_PIDS_CONTROL);
                 strcpy(pidcount->settings[0]->name,"pids.max");
                 strcpy(cpucpus->settings[0]->value,optarg);
                 pidcount->settings[1]= &self_to_task;
@@ -181,7 +179,7 @@ int main(int argc, char **argv)
                 for (k=0; k<3; k++){
                         memlim->settings[k] = malloc(sizeof(struct cgroup_setting));
                 }
-                strcpy(memlim->control,CGRP_CPU_CONTROL);
+                strcpy(memlim->control,CGRP_MEMORY_CONTROL);
                 strcpy(memlim->settings[0]->name,"memory.limit");
                 strcpy(cpucpus->settings[0]->value,optarg);
                 memlim->settings[1]= &self_to_task;
