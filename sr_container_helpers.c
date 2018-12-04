@@ -8,6 +8,10 @@
  *                      setup_syscall_filters()
  *                  No other changes are needed to this file
 */
+/*
+Group Number: 26
+STUDENT NAMES: Celine Huang (celine.huang@mail.mcgill.ca), Kaan Yilmaz (kaan.yilmaz@mail.mcgill.ca)
+*/
 #include "sr_container.h"
 
 int switch_child_root(const char *new_root, const char *put_old)

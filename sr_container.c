@@ -6,6 +6,10 @@
  *  @description:   A template C code to be filled in order to spawn container instances
  *  @compilation:   Use "make container" with the given Makefile
 */
+/*
+Group Number: 26
+STUDENT NAMES: Celine Huang (celine.huang@mail.mcgill.ca), Kaan Yilmaz (kaan.yilmaz@mail.mcgill.ca)
+*/
 
 #include "sr_container.h"
 
