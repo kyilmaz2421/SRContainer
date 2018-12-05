@@ -90,8 +90,6 @@ int main(int argc, char **argv)
     
     while ((option = getopt(argc, argv, "C:s:p:M:r:w:H:m:u:c")))
     {
-	printf("opatarhv %s and optiones %d and flagzz %d \n", optarg,option,found_cflag);
-
    	if (found_cflag)
             break;
 
@@ -114,27 +112,27 @@ int main(int argc, char **argv)
             }
             break;
         case 'C':
-		cpushares = (struct cgroups_control *)  malloc (sizeof(struct cgroups_control));
-        	cpushares->settings = (struct cgroup_setting**) malloc(3*sizeof(struct cgroup_setting));
-		k=0;
-		for (k=0; k<3; k++){
-			cpushares->settings[k] = malloc(sizeof(struct cgroup_setting));
-		}	
-		strcpy(cpushares->control,CGRP_CPU_CONTROL);
-        	strcpy(cpushares->settings[0]->name,"cpu.shares");
-        	strcpy(cpushares->settings[0]->value,optarg);
-        	cpushares->settings[1]= &self_to_task;
-        	cpushares->settings[2] = NULL;
-		k=0;
-		while(cgroups[k]!=NULL){
-			k++;
-		}       
-		cgroups[k] = cpushares;
-		cgroups[k+1] = NULL;
-		printf("been at C \n");
-		break;
+		        cpushares = (struct cgroups_control *)  malloc (sizeof(struct cgroups_control));
+        	    cpushares->settings = (struct cgroup_setting**) malloc(3*sizeof(struct cgroup_setting));
+		        k=0;
+		        for (k=0; k<3; k++){
+			        cpushares->settings[k] = malloc(sizeof(struct cgroup_setting));
+		        }	
+		        strcpy(cpushares->control,CGRP_CPU_CONTROL);
+        	    strcpy(cpushares->settings[0]->name,"cpu.shares");
+        	    strcpy(cpushares->settings[0]->value,optarg);
+        	    cpushares->settings[1]= &self_to_task;
+        	    cpushares->settings[2] = NULL;
+		        k=0;
+		        while(cgroups[k]!=NULL){
+			        k++;
+		        }       
+		        cgroups[k] = cpushares;
+		        cgroups[k+1] = NULL;
+		        printf("been at C \n");
+		        break;
         case 's':
-               cpucpus = (struct cgroups_control *)  malloc (sizeof(struct cgroups_control));
+                ccpucpus = (struct cgroups_control *)  malloc (sizeof(struct cgroups_control));
                 cpucpus->settings = (struct cgroup_setting**) malloc(4*sizeof(struct cgroup_setting));
                 k=0;
                 for (k=0; k<4; k++){
@@ -154,8 +152,9 @@ int main(int argc, char **argv)
                 cgroups[k] = cpucpus;
                 cgroups[k+1] = NULL;
                 break;
+
         case 'p':
-		pidcount = (struct cgroups_control *)  malloc (sizeof(struct cgroups_control));
+		        pidcount = (struct cgroups_control *)  malloc (sizeof(struct cgroups_control));
                 pidcount->settings = (struct cgroup_setting**) malloc(3*sizeof(struct cgroup_setting));
                 k=0;
                 for (k=0; k<3; k++){
@@ -175,7 +174,7 @@ int main(int argc, char **argv)
                 break;
 
         case 'M':
-	        memlim = (struct cgroups_control *)  malloc (sizeof(struct cgroups_control));
+	            memlim = (struct cgroups_control *)  malloc (sizeof(struct cgroups_control));
                 memlim->settings = (struct cgroup_setting**) malloc(3*sizeof(struct cgroup_setting*));
                 k=0;
                 for (k=0; k<3; k++){
@@ -194,8 +193,8 @@ int main(int argc, char **argv)
                 cgroups[k+1] = NULL;
                 break;
 		
-	case 'r':
-		if(blkio == NULL){
+	    case 'r':
+		        if(blkio == NULL){
 	        	blkio = (struct cgroups_control *)  malloc (sizeof(struct cgroups_control));
                 	blkio->settings = (struct cgroup_setting**) malloc(4*sizeof(struct cgroup_setting*));
                 	k=0;
@@ -203,24 +202,24 @@ int main(int argc, char **argv)
                        		 blkio->settings[k] = malloc(sizeof(struct cgroup_setting));
                 	}
                 	strcpy(blkio->settings[0]->name,cgroups[0]->settings[0]->name);
-			strcpy(blkio->settings[0]->value,cgroups[0]->settings[0]->value);
-			strcpy(blkio->settings[1]->name,"blkio.throttle.read_iops_device");
-			strcpy(blkio->settings[1]->value,optarg);
-			blkio->settings[2] = &self_to_task;
-			blkio->settings[3] = NULL;
-		}
-		else{
-		 	blkio->settings = (struct cgroup_setting**) realloc(blkio->settings,5*sizeof(struct cgroup_setting*));
-		   	blkio->settings[3] = malloc(sizeof(struct cgroup_setting));
-		   	strcpy(blkio->settings[3]->name,"blkio.throttle.read_iops_device");
-               		strcpy(blkio->settings[3]->value,optarg);
-			blkio->settings[4] = NULL;
-		}	
+			    strcpy(blkio->settings[0]->value,cgroups[0]->settings[0]->value);
+			    strcpy(blkio->settings[1]->name,"blkio.throttle.read_iops_device");
+			    strcpy(blkio->settings[1]->value,optarg);
+			    blkio->settings[2] = &self_to_task;
+			    blkio->settings[3] = NULL;
+		        }
+                else{
+                    blkio->settings = (struct cgroup_setting**) realloc(blkio->settings,5*sizeof(struct cgroup_setting*));
+                    blkio->settings[3] = malloc(sizeof(struct cgroup_setting));
+                    strcpy(blkio->settings[3]->name,"blkio.throttle.read_iops_device");
+                            strcpy(blkio->settings[3]->value,optarg);
+                    blkio->settings[4] = NULL;
+                }	
                 break;
 
 
         case 'w':
-		if(blkio == NULL){
+		        if(blkio == NULL){
                 	blkio = (struct cgroups_control *)  malloc (sizeof(struct cgroups_control));
                 	blkio->settings = (struct cgroup_setting**) malloc(4*sizeof(struct cgroup_setting*));
                 	k=0;
@@ -240,12 +239,12 @@ int main(int argc, char **argv)
                    	strcpy(blkio->settings[3]->name,"blkio.throttle.write_iops_device");
                 	strcpy(blkio->settings[3]->value,optarg);
                  	blkio->settings[4] = NULL;
-		} 
+		        } 
                 break;
    
-   	case 'H':
+   	    case 'H':
         	config.hostname = optarg;
-		break;
+		    break;
         default:
             cleanup_stuff(argv, sockets);
             return EXIT_FAILURE;
@@ -255,7 +254,6 @@ int main(int argc, char **argv)
 
      
     cgroups[5] = NULL;
-    printf("mader outta them loops eh \n");
 
     if (!config.argc || !config.mount_dir){
         cleanup_stuff(argv, sockets);
