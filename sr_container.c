@@ -141,7 +141,7 @@ int main(int argc, char **argv)
                         cpucpus->settings[k] = malloc(sizeof(struct cgroup_setting));
                 }
                 strcpy(cpucpus->control,CGRP_CPU_SET_CONTROL);
-                strcpy(cpucpus->settings[0]->name,"cpu.cpus");
+                strcpy(cpucpus->settings[0]->name,"cpuset.cpus");
                 strcpy(cpucpus->settings[0]->value,optarg);
                 cpucpus->settings[1]= &self_to_task;
                 cpucpus->settings[2] = NULL;
@@ -180,7 +180,7 @@ int main(int argc, char **argv)
                         memlim->settings[k] = malloc(sizeof(struct cgroup_setting));
                 }
                 strcpy(memlim->control,CGRP_MEMORY_CONTROL);
-                strcpy(memlim->settings[0]->name,"memory.limit");
+                strcpy(memlim->settings[0]->name,"memory.limit_in_bytes");
                 strcpy(memlim->settings[0]->value,optarg);
                 memlim->settings[1]= &self_to_task;
                 memlim->settings[2] = NULL;
