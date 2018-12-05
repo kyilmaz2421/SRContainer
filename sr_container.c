@@ -134,17 +134,19 @@ int main(int argc, char **argv)
 		printf("been at C \n");
 		break;
         case 's':
-                cpucpus = (struct cgroups_control *)  malloc (sizeof(struct cgroups_control));
-                cpucpus->settings = (struct cgroup_setting**) malloc(3*sizeof(struct cgroup_setting));
+               cpucpus = (struct cgroups_control *)  malloc (sizeof(struct cgroups_control));
+                cpucpus->settings = (struct cgroup_setting**) malloc(4*sizeof(struct cgroup_setting));
                 k=0;
-                for (k=0; k<3; k++){
+                for (k=0; k<4; k++){
                         cpucpus->settings[k] = malloc(sizeof(struct cgroup_setting));
                 }
                 strcpy(cpucpus->control,CGRP_CPU_SET_CONTROL);
                 strcpy(cpucpus->settings[0]->name,"cpuset.cpus");
                 strcpy(cpucpus->settings[0]->value,optarg);
-                cpucpus->settings[1]= &self_to_task;
-                cpucpus->settings[2] = NULL;
+                strcpy(cpucpus->settings[1]->name,"cpuset.mems");
+                strcpy(cpucpus->settings[1]->value,"0");
+                cpucpus->settings[2]= &self_to_task;
+                cpucpus->settings[3] = NULL;
                 k=0;
                 while(cgroups[k]!=NULL){
                         k++;
