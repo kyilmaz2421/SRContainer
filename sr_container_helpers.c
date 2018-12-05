@@ -8,6 +8,10 @@
  *                      setup_syscall_filters()
  *                  No other changes are needed to this file
 */
+/*
+Group Number: 26
+STUDENT NAMES: Celine Huang (celine.huang@mail.mcgill.ca), Kaan Yilmaz (kaan.yilmaz@mail.mcgill.ca)
+*/
 #include "sr_container.h"
 
 int switch_child_root(const char *new_root, const char *put_old)
@@ -17,13 +21,9 @@ int switch_child_root(const char *new_root, const char *put_old)
      *  Simply use the "pivot_root()" system call to switch child's root to the new root
      *  ------------------------------------------------------
      * */ 
-    int result = pivot_root(new_root, put_old);
-    if(result < 0){
-        perror("pivot_root error!");
-    }
-    else{
-        return 0;
-    }
+    pid_t result = syscall(SYS_pivot_root, new_root, put_old);
+  
+        return result;
 }
 
 /**
@@ -56,7 +56,7 @@ int setup_child_capabilities(){
     for(size_t i = 0; i < num_caps_to_drop; i++){
 
         if(prctl(PR_CAPBSET_DROP, drop_caps[i], 0, 0, 0)){
-            fprint(stderr, "prctl filaed: %m\n");
+            fprintf(stderr, "prctl filaed: %m\n");
             return 1;
         }
 
@@ -89,7 +89,7 @@ int setup_child_capabilities(){
     }
 
     cap_free(caps);
-
+   return 0;
 }
 
 /**
@@ -158,7 +158,7 @@ int setup_syscall_filters(){
     }
 
     // syscall filter for clone
-    filter_set_status = seccomp_rule_add(seccomp_ctx, SCMP_FAIL, SCMP_SYS(clone), 1, SCMP_A2(SCMP_CMP_MASKED_EQ, CLONE_NEWUSER, CLONE_NEWUSER));
+    filter_set_status = seccomp_rule_add(seccomp_ctx, SCMP_FAIL, SCMP_SYS(clone), 1, SCMP_A0(SCMP_CMP_MASKED_EQ, CLONE_NEWUSER, CLONE_NEWUSER));
     if (filter_set_status) {
         if (seccomp_ctx)
             seccomp_release(seccomp_ctx);
@@ -166,13 +166,20 @@ int setup_syscall_filters(){
         return EXIT_FAILURE;
     }
 
-    // syscall for chmod
-    filter_set_status = seccomp_rule_add(seccomp_ctx, SCMP_FAIL, SCMP_SYS(chmod), 2, 
-                            SCMP_A1(SCMP_CMP_MASKED_EQ, S_ISUID, S_ISUID), SCMP_A1(SCMP_CMP_MASKED_EQ, S_ISGID, S_ISGID));
-    if (filter_set_status) {
-        if (seccomp_ctx)
+    // syscall for chmod; one filter for S_ISGID abd another for S_ISUID
+    
+    filter_set_status =seccomp_rule_add(seccomp_ctx, SCMP_FAIL, SCMP_SYS(chmod), 1, SCMP_A1(SCMP_CMP_MASKED_EQ,S_ISGID));
+    if(filter_set_status){
+        if(seccomp_ctx) 
             seccomp_release(seccomp_ctx);
-        fprintf(stderr, "seccomp could not add KILL rule for 'chmod': %m\n");
+        fprintf(stderr, "seccomp could not add kill rule for 'chmod': %m\n");
+        return EXIT_FAILURE;
+    }
+    filter_set_status =seccomp_rule_add(seccomp_ctx, SCMP_FAIL, SCMP_SYS(chmod), 1, SCMP_A1(SCMP_CMP_MASKED_EQ,S_ISUID));
+    if(filter_set_status){
+        if(seccomp_ctx) 
+            seccomp_release(seccomp_ctx);
+        fprintf(stderr, "seccomp could not add kill rule for 'chmod': %m\n");
         return EXIT_FAILURE;
     }
 
@@ -194,6 +201,7 @@ int setup_syscall_filters(){
         fprintf(stderr, "seccomp could not load the new context: %m\n");
         return EXIT_FAILURE;
     }
+    return 0;
 }
 
 int setup_child_mounts(struct child_config *config)
@@ -324,6 +332,7 @@ int setup_cgroup_controls(struct child_config *config, struct cgroups_control **
 int free_cgroup_controls(struct child_config *config, struct cgroups_control **cgrps)
 {
     fprintf(stderr, "####### > cleaning cgroups...");
+  
     for (struct cgroups_control **cgrp = cgrps; *cgrp; cgrp++)
     {
         char dir[PATH_MAX] = {0};
@@ -337,6 +346,7 @@ int free_cgroup_controls(struct child_config *config, struct cgroups_control **c
             fprintf(stderr, "invocation to snprintf() failed: %m\n");
             return -1;
         }
+	    
         if ((task_fd = open(task, O_WRONLY)) == -1)
         {
             fprintf(stderr, "invocation to open() %s failed: %m\n", task);
