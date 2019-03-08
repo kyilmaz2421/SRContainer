@@ -112,25 +112,25 @@ int main(int argc, char **argv)
             }
             break;
         case 'C':
-		        cpushares = (struct cgroups_control *)  malloc (sizeof(struct cgroups_control));
+		    cpushares = (struct cgroups_control *)  malloc (sizeof(struct cgroups_control));
         	    cpushares->settings = (struct cgroup_setting**) malloc(3*sizeof(struct cgroup_setting));
-		        k=0;
-		        for (k=0; k<3; k++){
-			        cpushares->settings[k] = malloc(sizeof(struct cgroup_setting));
-		        }	
-		        strcpy(cpushares->control,CGRP_CPU_CONTROL);
+		    k=0;
+		    for (k=0; k<3; k++){
+		        cpushares->settings[k] = malloc(sizeof(struct cgroup_setting));
+    	            }	
+		    strcpy(cpushares->control,CGRP_CPU_CONTROL);
         	    strcpy(cpushares->settings[0]->name,"cpu.shares");
         	    strcpy(cpushares->settings[0]->value,optarg);
         	    cpushares->settings[1]= &self_to_task;
         	    cpushares->settings[2] = NULL;
-		        k=0;
-		        while(cgroups[k]!=NULL){
-			        k++;
-		        }       
-		        cgroups[k] = cpushares;
-		        cgroups[k+1] = NULL;
-		        printf("been at C \n");
-		        break;
+		    k=0;
+		    while(cgroups[k]!=NULL){
+		        k++;
+   	            }       
+		    cgroups[k] = cpushares;
+	            cgroups[k+1] = NULL;
+	            printf("been at C \n");
+	            break;
         case 's':
                 ccpucpus = (struct cgroups_control *)  malloc (sizeof(struct cgroups_control));
                 cpucpus->settings = (struct cgroup_setting**) malloc(4*sizeof(struct cgroup_setting));
@@ -154,7 +154,7 @@ int main(int argc, char **argv)
                 break;
 
         case 'p':
-		        pidcount = (struct cgroups_control *)  malloc (sizeof(struct cgroups_control));
+		pidcount = (struct cgroups_control *)  malloc (sizeof(struct cgroups_control));
                 pidcount->settings = (struct cgroup_setting**) malloc(3*sizeof(struct cgroup_setting));
                 k=0;
                 for (k=0; k<3; k++){
@@ -174,7 +174,7 @@ int main(int argc, char **argv)
                 break;
 
         case 'M':
-	            memlim = (struct cgroups_control *)  malloc (sizeof(struct cgroups_control));
+	        memlim = (struct cgroups_control *)  malloc (sizeof(struct cgroups_control));
                 memlim->settings = (struct cgroup_setting**) malloc(3*sizeof(struct cgroup_setting*));
                 k=0;
                 for (k=0; k<3; k++){
